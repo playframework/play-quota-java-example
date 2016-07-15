@@ -1,0 +1,59 @@
+@import com.lightbend.quota.japi.judge._
+@import com.lightbend.quota.japi._
+@import com.lightbend.correlation.CorrelationId
+@import _root_.demo.DemoResultFormatter._
+@import _root_.demo._
+@import java.time.Instant
+
+@(access: Access, user: User, requestCost: Int, quotaDisplay: QuotaDisplay, correlationId: CorrelationId)
+
+@main("Play User Quotas Demo") {
+
+  <style>
+  body {
+    font-size: 24pt;
+    font-family: 'Helvetica Nueue', sans-serif;
+  }
+
+  td, th {
+    text-align: left;
+    padding: 0.25em;
+  }
+
+  .subscript {
+    font-size: 20pt;
+  }
+  </style>
+  <div>
+
+    <table>
+      <tr><th>Access:</th><td>@access match {
+        case denied: AccessDenied => { <span style="color: red">DENIED</span> }
+        case granted: AccessGranted => { <span style="color: green">GRANTED</span> }
+      }</td></tr>
+      <tr><th>User:</th><td><i>@{user.getId}</i></td></tr>
+      <tr><th>Request cost:</th><td>@requestCost token</td></tr>
+      <tr><th>Correlation ID:</th><td>@correlationId</td></tr>
+      @quotaDisplay match {
+        case zero:ZeroDisplay => {
+          <tr><th>Quota:</th><td>Zero ∅</td></tr>
+        }
+        case unlimited:UnlimitedDisplay => {
+          <tr><th>Quota:</th><td>Unlimited (∞)</td></tr>
+        }
+        case limited: RateLimitedDisplay => {
+          <tr><th>Quota:</th><td>Rate limited</td></tr>
+          <tr>
+            <th>Balance:</th>
+            <td>@limited.balance() / <span class="subscript">@{limited.maxBalance}</span></td>
+          </tr>
+          <tr>
+            <th>Refill time:</th>
+            <td>@{limited.secondsUntilRefill} / <span class="subscript">@{limited.tickSeconds}s</td>
+          </tr>
+        }
+      }
+
+  </div>
+
+}
